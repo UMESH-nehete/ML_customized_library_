@@ -1,16 +1,19 @@
 # visualize.py
 
 import graphviz
-from my_ml_lib.nn.autograd import Value # Assuming Value is here
+# Assuming Value is in my_ml_lib.nn.autograd
+from my_ml_lib.nn.autograd import Value 
 import numpy as np
+import os
+os.environ["PATH"] += os.pathsep + r"C:\Program Files (x86)\Graphviz\bin"
 
 
-# --- TODO: Implement Graph Traversal ---
+
 def get_all_nodes_and_edges(root_node: Value):
     """
-    Performs a backward traversal  from the root_node
+    Performs a backward traversal from the root_node
     to find all unique Value nodes and the directed edges connecting them
-    in the computation graph.
+    in the computation graph (Problem 4.4a).
 
     Args:
         root_node (Value): The final node in the graph (e.g., the loss Value object).
@@ -21,78 +24,66 @@ def get_all_nodes_and_edges(root_node: Value):
                edges (set): A set of tuples (parent_Value, child_Value) representing
                             the directed edges: parent -> child.
     """
-    # --- TODO: Step 1 - Initialize Sets ---
-    # Create an empty set `nodes` to store unique Value objects.
-    # Create an empty set `edges` to store unique edge tuples (parent, child).
-    # Create an empty set `visited` to keep track of nodes already processed.
-    print("TODO: Initialize sets for nodes, edges, and visited in get_all_nodes_and_edges.")
+    # --- Step 1 - Initialize Sets ---
+    nodes = set()
+    edges = set()
+    visited = set()
 
 
-    # --- TODO: Step 2 - Implement DFS Traversal Function (`build_graph`) ---
-    # Define a recursive helper function (e.g., `build_graph(v)`) that takes a Value `v`.
-    # Inside the helper function:
-    #   a) Check if `v` has already been visited. If yes, return.
-    #   b) Add `v` to the `visited` set.
-    #   c) Add `v` to the `nodes` set.
-    #   d) Iterate through the parents of `v` (e.g., `for parent in v._prev:`).
-    #       i) Add the edge `(parent, v)` to the `edges` set.
-    #       ii) Recursively call the helper function on the `parent`.
-    print("TODO: Implement the recursive graph traversal logic in get_all_nodes_and_edges.")
-    def build_graph(v):
-        # Placeholder for the recursive logic
-        pass
+    # --- Step 2 - Implement DFS Traversal Function (`build_sets`) ---
+    def build_sets(node):
+        if node in visited:
+            return
+        
+        visited.add(node)
+        nodes.add(node)
+        
+        # _prev contains the parents of the current node (the operands)
+        for parent in node._prev:
+            # Add the directed edge: parent -> current node
+            edges.add((parent, node)) 
+            # Recursively call on the parent
+            build_sets(parent)
 
-    # --- TODO: Step 3 - Start Traversal ---
-    # Call your recursive helper function starting from the `root_node`.
-    print("TODO: Start the traversal from the root_node in get_all_nodes_and_edges.")
-    # build_graph(root_node) # Placeholder call
+    # --- Step 3 - Start Traversal ---
+    build_sets(root_node) 
 
-    # --- TODO: Step 4 - Return Results ---
-    # Return the populated `nodes` and `edges` sets.
+    # --- Step 4 - Return Results ---
     return nodes, edges
-# --- End TODO ---
+# --- End of Traversal Logic ---
 
 
-# ---  Graph Drawing Function ---
-def draw_dot(root_node: Value, format='svg', rankdir='LR'):
+# --- Graph Drawing Function (Keep the rest of the file as is) ---
+def draw_dot(root_node: Value, format='png', rankdir='LR'):
     """
     Generates a visualization of the computation graph using graphviz.
-    Requires the `get_all_nodes_and_edges` function to be implemented correctly.
-
-    Args:
-        root_node (Value): The final node of the graph to visualize (e.g., loss).
-        format (str): Output format ('svg', 'png', etc.). Default 'svg'.
-        rankdir (str): Graph layout direction ('LR' or 'TB'). Default 'LR'.
-
-    Returns:
-        graphviz.Digraph: The graph object ready for rendering.
     """
     assert rankdir in ['LR', 'TB']
-    # Call the student's implemented traversal function
     nodes, edges = get_all_nodes_and_edges(root_node)
-
 
     # Initialize graphviz object
     dot = graphviz.Digraph(format=format, graph_attr={'rankdir': rankdir})
 
     # Create nodes in the graphviz object
     for n in nodes:
-        uid = str(id(n)) # Unique ID for the Value node
+        uid = str(id(n)) 
 
         # Format data and gradient strings based on shape
         data_str = f"shape={n.data.shape}" if hasattr(n, 'data') and isinstance(n.data, np.ndarray) and n.data.ndim > 0 else f"{getattr(n, 'data', '?'):.4f}"
         grad_str = f"shape={n.grad.shape}" if hasattr(n, 'grad') and isinstance(n.grad, np.ndarray) and n.grad.ndim > 0 else f"{getattr(n, 'grad', '?'):.4f}"
         label_str = f" | {getattr(n, 'label', '')}" if getattr(n, 'label', '') else ""
+        
         # Create the label for the Value node rectangle
         node_label = f"{{ data {data_str} | grad {grad_str}{label_str} }}"
+        
         # Add the Value node
         dot.node(name=uid, label=node_label, shape='record')
 
         # If this Value node was created by an operation, add an op node
         op = getattr(n, '_op', '')
         if op:
-            op_uid = uid + op # Unique ID for the operation node
-            dot.node(name=op_uid, label=op) # Add the operation node (oval)
+            op_uid = uid + op 
+            dot.node(name=op_uid, label=op) 
             dot.edge(op_uid, uid) # Edge from Op -> Value
 
     # Create edges in the graphviz object
@@ -107,10 +98,10 @@ def draw_dot(root_node: Value, format='svg', rankdir='LR'):
     return dot
 
 
-#  Example Usage ---
-# This block demonstrates how students can use the draw_dot function
-# after implementing get_all_nodes_and_edges and their Value class ops.
+# Example Usage ---
+# The rest of the __main__ block remains the same for testing
 if __name__ == '__main__':
+    # ... [Example usage code] ...
     print("\n--- Visualization Example ---")
     # Simple expression: d = a*b + c*a
     a = Value(2.0, label='a')
@@ -120,30 +111,15 @@ if __name__ == '__main__':
     f = c*a; f.label='f'
     d = e + f; d.label='d'
 
-    # Perform a backward pass to calculate gradients (optional for visualization)
-    # try:
-    #     d.backward()
-    # except Exception as e:
-    #     print(f"Note: Backward pass failed in example: {e}. Visualization might still work.")
-
     print("Generating example computation graph...")
-    # Generate the graph visualization starting from the final node 'd'
     dot_graph = draw_dot(d)
 
     if dot_graph:
-        # Render the graph to a file (e.g., 'example_graph.svg')
-        # Requires Graphviz executables in system PATH
         try:
-            output_filename = 'example_computation_graph'
+            output_filename = 'computation_graph'
             dot_graph.render(output_filename, view=False)
             print(f"Example graph saved as {output_filename}.* (e.g., .svg or .png)")
             print("Please include this generated graph in your report for Problem 4.")
-        except graphviz.backend.execute.ExecutableNotFound:
-            print("\n--- Graphviz Error ---")
-            print("Graphviz executable not found. Visualization not saved.")
-            print("Please install Graphviz (from www.graphviz.org)")
-            print("and ensure the 'dot' command is available in your system's PATH.")
-            print("----------------------\n")
         except Exception as e:
             print(f"An error occurred during graph rendering: {e}")
     else:

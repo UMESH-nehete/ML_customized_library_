@@ -18,9 +18,9 @@ class ReLU(Module):
         return iter([])
 
 class Sigmoid(Module):
-    def __init__(self):
-        super().__init__()
-
+    """
+    Applies the sigmoid function: sigma(z) = 1 / (1 + exp(-z)) (Problem 4.2).
+    """
     def __call__(self, x: Value) -> Value:
         # Implemented using Value operations
         # 1. Compute -z
@@ -30,13 +30,13 @@ class Sigmoid(Module):
         exp_neg_x = neg_x.exp()
         
         # 3. Compute 1 + exp(-z)
-        denominator = 1.0 + exp_neg_x
+        denominator = 1.0 + exp_neg_x # Constant 1.0 is handled by Value.__add__
         
-        # 4. Compute 1 / denominator
-        out = denominator ** -1
+        # 4. Compute 1 / denominator (using power -1)
+        out = denominator ** -1 
         
         return out
-
+    
     def __repr__(self):
         return "Sigmoid()"
 

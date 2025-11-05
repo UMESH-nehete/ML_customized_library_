@@ -1,3 +1,5 @@
+# my_ml_lib/preprocessing/_gaussian.py
+
 import numpy as np
 
 class GaussianBasisFeatures:
@@ -5,17 +7,21 @@ class GaussianBasisFeatures:
         self.n_centers = n_centers
         self.sigma = sigma
         self.centers_ = None
-        self.random_state = random_state # For reproducibility if using random sampling
+        self.random_state = random_state
 
     def fit(self, X, y=None):
         """
-        Select n_centers random points from X as RBF centers.
+        Select n_centers random points from X as RBF centers (mu_j).
         """
-        # TODO: Determine the centers (mu_j).
-        # Strategy: Randomly sample n_centers points from X
-        # print("GaussianBasisFeatures: Fit method needs implementation.")
         rng = np.random.RandomState(self.random_state)
-        indices = rng.choice(X.shape[0], self.n_centers, replace=False)
+        
+        # Use rng.choice for reproducible random sampling
+        if X.shape[0] < self.n_centers:
+            # Handle case where n_samples < n_centers
+            indices = rng.choice(X.shape[0], X.shape[0], replace=False)
+        else:
+            indices = rng.choice(X.shape[0], self.n_centers, replace=False)
+            
         self.centers_ = X[indices]
         return self
 
@@ -24,30 +30,26 @@ class GaussianBasisFeatures:
         Transform input X into Gaussian RBF features.
         Output shape: (n_samples, n_centers)
         """
-
         if self.centers_ is None:
             raise RuntimeError("Transformer is not fitted yet.")
-        # TODO: Apply the RBF formula: exp(-(||X - center||^2 / (2 * sigma^2)))
-      
-    
+
         # Compute squared Euclidean distance between each sample and each center
-        # Using broadcasting: ||x - mu||^2 = (x - mu)^2 summed over features
         # X shape: (n_samples, n_features)
         # centers_ shape: (n_centers, n_features)
-        print("GaussianBasisFeatures: Transform method needs implementation.")
+        
+        # 1. Expand dimensions for broadcasting (X[:, newaxis, :] - centers_[newaxis, :, :])
+        # Resulting shape (n_samples, n_centers, n_features)
+        diff_sq = (X[:, np.newaxis, :] - self.centers_[np.newaxis, :, :])**2 
+        
+        # 2. Sum along the feature axis (axis=2) to get squared distance
+        # dist_sq shape: (n_samples, n_centers)
+        dist_sq = np.sum(diff_sq, axis=2)
 
-        dist_sq = np.sum((X[:, np.newaxis, :] - self.centers_[np.newaxis, :, :])**2, axis=2)
-
-        # Gaussian RBF formula
+        # 3. Apply Gaussian RBF formula: exp(- ||X - center||^2 / (2 * sigma^2))
         Phi = np.exp(- dist_sq / (2 * self.sigma**2))
-
+        
         return Phi 
     
-    
-    
-    # Placeholder - need matrix of RBF values
-
     def fit_transform(self, X, y=None):
         self.fit(X, y)
         return self.transform(X)
-

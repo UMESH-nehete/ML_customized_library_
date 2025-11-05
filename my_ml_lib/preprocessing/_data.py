@@ -27,10 +27,10 @@ class StandardScaler:
         # If std dev is 0, scaling won't change the value (it's already 0 after mean subtraction)
         # We replace scale_ with 1 in these cases to avoid NaN results.
       #---
-
+        self.n_features_in_ = X.shape[1]
         self.mean_=np.mean(X, axis=0)
         self.scale_=np.std(X, axis=0)
-        self.scale_[self.scale_==0]=1e-8
+        self.scale_[self.scale_==0]=1.0
             #---
         return self
 
@@ -47,7 +47,8 @@ class StandardScaler:
         if self.mean_ is None or self.scale_ is None:
             raise RuntimeError("This StandardScaler instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator.")
             
- 
+        if X.shape[1] != self.n_features_in_:
+             raise ValueError("X has a different number of features than during fit.")
         # Apply the transformation: 
  #---
         X_scaled = (X - self.mean_) / self.scale_
