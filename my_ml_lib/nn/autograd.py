@@ -268,3 +268,26 @@ class Value:
 
         for node in reversed(topo):
             node._backward()
+# ... [Existing Value class code, including the backward method] ...
+
+def get_all_nodes_and_edges(root_node):
+    """
+    Traverses the computation graph backward from the root node to collect 
+    all unique Value nodes and the edges (connections) between them.
+    Used for graph visualization (Problem 4.4a).
+    """
+    nodes = set()
+    edges = set()
+
+    def build_sets(node):
+        nodes.add(node)
+        # _prev is the set of parents (children in the forward sense)
+        for child in node._prev:
+            # Edge is represented as (parent_node_id, current_node_id)
+            # The edge connects the parent (child._prev) to the result (node)
+            edges.add((child, node)) 
+            build_sets(child)
+
+    build_sets(root_node)
+    
+    return nodes, edges

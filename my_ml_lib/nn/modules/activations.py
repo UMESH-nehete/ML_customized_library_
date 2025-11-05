@@ -22,9 +22,20 @@ class Sigmoid(Module):
         super().__init__()
 
     def __call__(self, x: Value) -> Value:
-        # sigmoid = 1 / (1 + exp(-x))
-        one = Value(np.array(1.0))
-        return one / (one + (-x).exp())
+        # Implemented using Value operations
+        # 1. Compute -z
+        neg_x = -x 
+        
+        # 2. Compute exp(-z)
+        exp_neg_x = neg_x.exp()
+        
+        # 3. Compute 1 + exp(-z)
+        denominator = 1.0 + exp_neg_x
+        
+        # 4. Compute 1 / denominator
+        out = denominator ** -1
+        
+        return out
 
     def __repr__(self):
         return "Sigmoid()"
