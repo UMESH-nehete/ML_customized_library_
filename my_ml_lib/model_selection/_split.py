@@ -38,3 +38,37 @@ def train_test_split(X, y, test_size=0.2, shuffle=True, random_state=None):
     y_test  = y[test_indices]
 
     return X_train, X_test, y_train, y_test
+
+def train_test_val_split(X, y, train_ratio=0.7, val_ratio=0.1, test_ratio=0.2, random_state=None):
+    """
+    Splits X and y arrays into random train, validation, and test subsets.
+    """
+    n_samples = X.shape[0]
+    
+    if not np.isclose(train_ratio + val_ratio + test_ratio, 1.0):
+        raise ValueError("Ratios must sum to 1.0")
+
+    if random_state is not None:
+        np.random.seed(random_state)
+    
+    # 1. Calculate split sizes
+    n_train = int(n_samples * train_ratio)
+    n_val = int(n_samples * val_ratio)
+    n_test = n_samples - n_train - n_val # Ensure all samples are used
+
+    # 2. Create and shuffle indices
+    indices = np.arange(n_samples)
+    np.random.shuffle(indices)
+
+    # 3. Split indices
+    train_indices = indices[:n_train]
+    val_indices = indices[n_train: n_train + n_val]
+    test_indices = indices[n_train + n_val:]
+
+    # 4. Slice arrays
+    X_train, y_train = X[train_indices], y[train_indices]
+    X_val, y_val = X[val_indices], y[val_indices]
+    X_test, y_test = X[test_indices], y[test_indices]
+
+    # Return all six arrays as required 
+    return X_train, y_train, X_val, y_val, X_test, y_test
